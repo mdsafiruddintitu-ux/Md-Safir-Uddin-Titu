@@ -1,0 +1,6 @@
+{
+  "name": "R N Enterprise",
+  "description": "Digital Service & IT Center - Premium Business Solutions, Shop Accounting, Inventory, Land Service Portal, Customer Ledgers, and Invoice Management",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

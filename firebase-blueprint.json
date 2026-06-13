@@ -1,0 +1,187 @@
+{
+  "entities": {
+    "user": {
+      "title": "User Profile",
+      "description": "Information about application users and their roles.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The Firebase Auth user ID" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "employee", "customer"] },
+        "phone": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "customer": {
+      "title": "Customer",
+      "description": "Represents a customer with an active ledger balance.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "email": { "type": "string" },
+        "dueAmount": { "type": "number" },
+        "advanceAmount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "phone"]
+    },
+    "product": {
+      "title": "Product",
+      "description": "An inventory item sold in the shop.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "stock": { "type": "number" },
+        "minStock": { "type": "number" },
+        "buyingPrice": { "type": "number" },
+        "sellingPrice": { "type": "number" },
+        "sku": { "type": "string" }
+      },
+      "required": ["id", "name", "category", "stock", "buyingPrice", "sellingPrice"]
+    },
+    "invoice": {
+      "title": "Invoice",
+      "description": "Reflects a single customer sale or digital service receipt.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "discount": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "dueAmount": { "type": "number" },
+        "paymentStatus": { "type": "string", "enum": ["Paid", "Partially Paid", "Unpaid"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "invoiceNumber", "totalAmount", "paidAmount"]
+    },
+    "accountingLog": {
+      "title": "Accounting Log",
+      "description": "Represents separate daily income and expense entries.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "refInvoiceId": { "type": "string" }
+      },
+      "required": ["id", "type", "amount", "category", "date"]
+    },
+    "mfsTransaction": {
+      "title": "MFS Transaction",
+      "description": "bKash, Nagad, or Rocket mobile financial transactions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "channel": { "type": "string", "enum": ["bKash", "Nagad", "Rocket"] },
+        "type": { "type": "string", "enum": ["Cash In", "Cash Out", "Send Money", "Bill Pay"] },
+        "amount": { "type": "number" },
+        "fee": { "type": "number" },
+        "customerPhone": { "type": "string" },
+        "trxId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Success", "Pending", "Failed"] },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "channel", "type", "amount", "trxId"]
+    },
+    "project": {
+      "title": "IT Project",
+      "description": "Software, web, app, or domain & hosting contracts.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientContact": { "type": "string" },
+        "type": { "type": "string", "enum": ["Website", "Mobile App", "Domain/Hosting", "IT Consult"] },
+        "status": { "type": "string", "enum": ["Quoted", "In Progress", "Completed", "On Hold"] },
+        "cost": { "type": "number" },
+        "paid": { "type": "number" },
+        "deadline": { "type": "string", "format": "date" }
+      },
+      "required": ["id", "title", "clientName", "cost", "paid"]
+    },
+    "employee": {
+      "title": "Employee Profile",
+      "description": "Tracks salary, role, and simple daily attendance logs.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "designation": { "type": "string" },
+        "salary": { "type": "number" },
+        "attendance": { "type": "object" }
+      },
+      "required": ["id", "name", "phone", "salary"]
+    },
+    "websiteLink": {
+      "title": "Website Link",
+      "description": "Shortcuts to critical portals (e.g., E-Namjari, NID registration).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "url": { "type": "string" },
+        "isFavorite": { "type": "boolean" },
+        "recentClicks": { "type": "number" }
+      },
+      "required": ["id", "title", "category", "url"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "Application user records with localized dashboard access levels."
+    },
+    "/customers/{customerId}": {
+      "schema": "customer",
+      "description": "Business customer contacts and direct ledger logs."
+    },
+    "/products/{productId}": {
+      "schema": "product",
+      "description": "Shop stock, min limits, and tracking details."
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "invoice",
+      "description": "Billing receipts and itemized digital transactions."
+    },
+    "/accounting/{logId}": {
+      "schema": "accountingLog",
+      "description": "Income and expense transactions recording cash book entries."
+    },
+    "/mfsTransactions/{txId}": {
+      "schema": "mfsTransaction",
+      "description": "bKash, Rocket, and Nagad agency ledger transactions."
+    },
+    "/projects/{projectId}": {
+      "schema": "project",
+      "description": "Custom development, web apps, hosting domain milestones."
+    },
+    "/employees/{employeeId}": {
+      "schema": "employee",
+      "description": "Salary structures and shop team registers."
+    },
+    "/websiteLinks/{linkId}": {
+      "schema": "websiteLink",
+      "description": "Categorized shortcuts to land and civic portals in Bangladesh."
+    }
+  }
+}

@@ -1,0 +1,158 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Catch-all Block: Deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions for validating requests
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Checking if user is verified
+    function isEmailVerified() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'google.com');
+    }
+
+    // Validations
+    function isValidUser(data) {
+      return data.uid == request.auth.uid 
+        && data.email is string 
+        && (data.role == 'admin' || data.role == 'employee' || data.role == 'customer');
+    }
+
+    function isValidCustomer(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 128
+        && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 20;
+    }
+
+    function isValidProduct(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.category is string
+        && data.stock is number
+        && data.buyingPrice is number
+        && data.sellingPrice is number;
+    }
+
+    function isValidInvoice(data) {
+      return data.invoiceNumber is string 
+        && data.totalAmount is number 
+        && data.paidAmount is number;
+    }
+
+    function isValidAccounting(data) {
+      return (data.type == 'income' || data.type == 'expense')
+        && data.amount is number
+        && data.category is string;
+    }
+
+    function isValidMfs(data) {
+      return (data.channel == 'bKash' || data.channel == 'Nagad' || data.channel == 'Rocket')
+        && (data.type == 'Cash In' || data.type == 'Cash Out' || data.type == 'Send Money' || data.type == 'Bill Pay')
+        && data.amount is number
+        && data.trxId is string;
+    }
+
+    function isValidProject(data) {
+      return data.title is string && data.title.size() > 0
+        && data.clientName is string
+        && data.cost is number
+        && data.paid is number;
+    }
+
+    function isValidEmployee(data) {
+      return data.name is string && data.name.size() > 0
+        && data.phone is string
+        && data.salary is number;
+    }
+
+    function isValidWebsiteLink(data) {
+      return data.title is string && data.title.size() > 0
+        && data.url is string;
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && (resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(userId) && isValidUser(request.resource.data);
+      allow update: if isSignedIn() && isValidId(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role); // Role is immutable by the client
+      allow delete: if false; // Deny user deletion by clients
+    }
+
+    // 2. Customers Collection
+    match /customers/{customerId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(customerId) && isValidCustomer(request.resource.data);
+      allow update: if isSignedIn() && isValidId(customerId) && isValidCustomer(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(customerId);
+    }
+
+    // 3. Products (Inventory)
+    match /products/{productId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(productId) && isValidProduct(request.resource.data);
+      allow update: if isSignedIn() && isValidId(productId) && isValidProduct(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(productId);
+    }
+
+    // 4. Invoices
+    match /invoices/{invoiceId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(invoiceId) && isValidInvoice(request.resource.data);
+      allow update: if isSignedIn() && isValidId(invoiceId) && isValidInvoice(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(invoiceId);
+    }
+
+    // 5. Accounting Logs
+    match /accounting/{logId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(logId) && isValidAccounting(request.resource.data);
+      allow update: if isSignedIn() && isValidId(logId) && isValidAccounting(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(logId);
+    }
+
+    // 6. Mobile Banking Transactions (MFS)
+    match /mfsTransactions/{txId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(txId) && isValidMfs(request.resource.data);
+      allow update: if isSignedIn() && isValidId(txId) && isValidMfs(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(txId);
+    }
+
+    // 7. IT Projects
+    match /projects/{projectId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(projectId) && isValidProject(request.resource.data);
+      allow update: if isSignedIn() && isValidId(projectId) && isValidProject(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(projectId);
+    }
+
+    // 8. Employees
+    match /employees/{employeeId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(employeeId) && isValidEmployee(request.resource.data);
+      allow update: if isSignedIn() && isValidId(employeeId) && isValidEmployee(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(employeeId);
+    }
+
+    // 9. Website Links Directory
+    match /websiteLinks/{linkId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(linkId) && isValidWebsiteLink(request.resource.data);
+      allow update: if isSignedIn() && isValidId(linkId) && isValidWebsiteLink(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(linkId);
+    }
+  }
+}
